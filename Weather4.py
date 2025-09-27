@@ -181,11 +181,13 @@ if dashboard_type == "Citizen/User":
     if df is not None:
         predicted_rain = prophet_forecast_with_history(df, 3)
         rain_prob = rain_probability(predicted_rain)
-        risk, _, flood_prob = predict_flood_risk_from_rain(predicted_rain)
+        risk, total_rain, flood_prob = predict_flood_risk_from_rain(predicted_rain)
+        st.write(f"🌧️ Total Rainfall in next 3 hours: {total_rain:.2f} mm")
 
         st.subheader(f"Flood Risk in {city}: {risk}")
         st.write(f"☔ Chance of Rain in next 3 hours: {rain_prob}%")
         st.write(f"💧 Approximate Flood Probability: {flood_prob:.0f}%")
+        st.write(f"🌧️ Total Rainfall in next 3 hours: {total_rain:.2f} mm")
         st.write("🕒 Prediction times (local):", ", ".join(next_3_times))
 
         m = folium.Map(location=[lat, lon], zoom_start=10)
@@ -211,8 +213,9 @@ elif dashboard_type == "Admin":
         df, next_3_times = prepare_data_for_prophet(lat, lon)
         if df is not None:
             predicted_rain = prophet_forecast_with_history(df, 3)
-            rain_prob = rain_probability(predicted_rain)
-            risk, _, flood_prob = predict_flood_risk_from_rain(predicted_rain)
+            rain_prob = rain_probability(predicted_rain
+            risk, total_rain, flood_prob = predict_flood_risk_from_rain(predicted_rain)
+   
         else:
             risk, rain_prob, flood_prob = "Unknown", 0, 0
         risks.append({
@@ -220,12 +223,13 @@ elif dashboard_type == "Admin":
             "Risk": risk,
             "Rain_%": rain_prob,
             "Flood_%": flood_prob,
+            "TotalRain_mm": total_rain,
             "Lat": lat,
             "Lon": lon,
             "Next_3_hours": ", ".join(next_3_times) if next_3_times else "N/A"
         })
     df_risks = pd.DataFrame(risks)
-    st.dataframe(df_risks[['City','Risk','Rain_%','Flood_%','Next_3_hours']])
+    st.dataframe(df_risks[['City','Risk','Rain_%','Flood_%','TotalRain_mm','Next_3_hours']])
 
     m = folium.Map(location=[20, 78], zoom_start=5)
     for entry in risks:
@@ -345,3 +349,4 @@ else:
                             st.experimental_rerun()
                         else:
                             st.error("Failed to post comment")
+
