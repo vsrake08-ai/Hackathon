@@ -58,15 +58,20 @@ def get_reports():
 def update_reports(reports, sha, message):
     encoded_json = base64.b64encode(json.dumps(reports, indent=2).encode()).decode()
     url_json = f"https://api.github.com/repos/{GITHUB_USER}/{GITHUB_REPO}/contents/{JSON_PATH}"
-    r2 = requests.put(url_json, headers=HEADERS, json={
+
+    payload = {
         "message": message,
-        "content": encoded_json,
-        "sha": sha
-    })
+        "content": encoded_json
+    }
+    if sha:  # Only include sha if the file already exists
+        payload["sha"] = sha
+
+    r2 = requests.put(url_json, headers=HEADERS, json=payload)
     if r2.status_code not in [200, 201]:
-        st.error("Failed to update reports.json")
+        st.error(f"Failed to update {JSON_PATH}: {r2.status_code} {r2.text}")
         st.stop()
     st.session_state["rerun_flag"] = not st.session_state["rerun_flag"]
+
 
 # ----------------------------
 # Weather & Flood Predictor functions
@@ -323,4 +328,5 @@ else:
                 comment_submitted = st.form_submit_button("Post Comment")
                 if comment_submitted and current_user and comment_text:
                     report.setdefault("comments", []).append(f"{current_user.strip()}: {comment_text.strip()}")
+
                     update_reports(reports, sha, message=f"Add comment on report {report['id']}")
