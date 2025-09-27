@@ -213,7 +213,7 @@ elif dashboard_type == "Admin":
         df, next_3_times = prepare_data_for_prophet(lat, lon)
         if df is not None:
             predicted_rain = prophet_forecast_with_history(df, 3)
-            rain_prob = rain_probability(predicted_rain
+            rain_prob = rain_probability(predicted_rain)
             risk, total_rain, flood_prob = predict_flood_risk_from_rain(predicted_rain)
    
         else:
@@ -349,4 +349,5 @@ else:
                             st.experimental_rerun()
                         else:
                             st.error("Failed to post comment")
+
 
